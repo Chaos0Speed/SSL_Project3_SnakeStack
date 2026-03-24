@@ -1,0 +1,9 @@
+body{
+    background-color: aqua;
+}
+
+.Canvas{
+    background-color: green;
+    border-color: red;
+    border-radius: 10px;
+}
