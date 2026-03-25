@@ -1,6 +1,7 @@
 <!DOCTYPE html>
     <head>
         <meta charset="UTF-8" name="SSL_Project_Game"> 
+        
         <title> Snake Stack Game</title>
         <link href = "style.css" rel="stylesheet">
         <script src="javascript.js" defer></script>
@@ -12,7 +13,7 @@
             Status : <span id="status">Normal</span>
         </div>
         <div id="GameContainer">
-            <canvas id="Canvas" style="height:90vh;aspect-ratio:1/1;position:absolute;display:none">
+            <canvas id="Canvas" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border:2px solid white; display:none">
             </canvas>
             <div id="StartScreen" style="position:absolute;display:block;">
                 <h2>HELLO!<br> WELCOME TO THE SNAKE GAME </h2>
@@ -25,15 +26,15 @@
                 <h2>INSTRUCTIONS</h2>
                 <p><strong>Rules:</strong> Use <b>Arrow Keys</b> or <b>WASD</b> to move. <br>Don't hit walls or yourself.</p>
                     <ul>
-                        <li>🥕 Carrot: +1 Health</li>
-                        <li>🥧 Pumpkin Pie: +3 Health</li>
-                        <li>🍎 Golden Apple: 10s Immunity</li>
+                        <li> Carrot: +1 Health</li>
+                        <li> Pumpkin Pie: +3 Health</li>
+                        <li> Golden Apple: 10s Immunity</li>
                     </ul>
                 <button type="submit" id="StartButton">START</button>
             </div>
             <div id="EndScreen" style="display:none;position:absolute;">
                 <p><strong>Cause of Death:</strong> <span id="Cause"></span></p>
-                <p><strong>Final Score:</strong> <span id="Score"></span></p>
+                <p><strong>Final Score:</strong> <span id="finalScore"></span></p>
                 <p><strong>Time Survived:</strong> <span id="SurvivedTime"></span></p>
                 <p><strong>Session High Score:</strong> <span id="HighScore"></span></p>
                 <button type="submit" id="restart"> RESTART </button>
