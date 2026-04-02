@@ -21,17 +21,21 @@ startbutton.onclick = () => {
 
 document.getElementById("restart").onclick = () => {
     document.getElementById("EndScreen").style.display = "none";
-    document.getElementById("Instructions").style.display = "block";
+    document.getElementById("Canvas").style.display = "block";
+    document.getElementById("RunningInfo").style.visibility = "visible";
+    player.innerText = username.value;
+    score.innerText = 0;
+    startGame();
 };
 
-const canvas = document.getElementById("Canvas");
-const ctx = canvas.getContext("2d");
+const canvasBlock = document.getElementById("Canvas");
+const canvas = canvasBlock.getContext("2d");
 const gridSize = 20;
 let tileCount;
 
 let currentHighScore = 0;
 let currentScore = 0;
-let foodX, foodY, foodType, isImmune, immtimeout, gameInterval;
+let foodX, foodY, foodType, isImmune, immtimeout, gameInterval, immtime, immtimetimeout;
 let startTime = 0, endTime = 0;
 
 let snake = [];
@@ -39,10 +43,10 @@ let dx = 0;
 let dy = 0;
 
 document.addEventListener("keydown", (e) => {
-    if ((e.key === "ArrowUp" || e.key === "w") && dy !== 1) { dx = 0; dy = -1; }
-    if ((e.key === "ArrowDown" || e.key === "s") && dy !== -1) { dx = 0; dy = 1; }
-    if ((e.key === "ArrowLeft" || e.key === "a") && dx !== 1) { dx = -1; dy = 0; }
-    if ((e.key === "ArrowRight" || e.key === "d") && dx !== -1) { dx = 1; dy = 0; }
+    if ((e.key === "ArrowUp"  || e.key === "w"|| e.key === "W") && dy !== 1) { dx = 0; dy = -1; }
+    if ((e.key === "ArrowDown" || e.key === "s" || e.key === "S") && dy !== -1) { dx = 0; dy = 1; }
+    if ((e.key === "ArrowLeft" || e.key === "a"|| e.key === "A") && dx !== 1) { dx = -1; dy = 0; }
+    if ((e.key === "ArrowRight" || e.key === "d"|| e.key === "D") && dx !== -1) { dx = 1; dy = 0; }
 });
 
 function startGame() {
@@ -56,12 +60,14 @@ function startGame() {
     if (gameInterval) clearInterval(gameInterval);
     const maxSize = Math.min(window.innerWidth * 0.85, window.innerHeight * 0.85);
     tileCount = Math.floor(maxSize / gridSize);
-    canvas.width = canvas.height = tileCount * gridSize;
+    canvasBlock.width = canvasBlock.height = tileCount * gridSize;
     foodSpawn();
-    gameInterval = setInterval(runGame, 60);
+    gameInterval = setInterval(runGame, 120);
 };
 
 function runGame() {
+    clearInterval(gameInterval);
+    gameInterval = setInterval(runGame, (120 - Math.min(100, currentScore)));
     let newHead = [snake[0][0] + dx, snake[0][1]+dy];
     snake.unshift(newHead);
     snake.pop();
@@ -77,12 +83,19 @@ function runGame() {
             grow(3);
             currentScore += 3;
         }
-        else if (foodType == 'goldenapple') {
+        else if (foodType == 'star') {
             isImmune = true;
-            document.getElementById("status").innerText = "IMMUNE!";
+            immtime = 10;
+            document.getElementById("status").innerText = `IMMUNE!(${immtime}s)`;
+            clearInterval(immtimetimeout);
+            immtimetimeout = setInterval( () => {
+                immtime -= 1;
+                document.getElementById("status").innerText = `IMMUNE!(${immtime}s)`;
+            }, 1000);
             clearTimeout(immtimeout);
             immtimeout = setTimeout( () => {
                 isImmune = false;
+                clearInterval(immtimetimeout);
                 document.getElementById("status").innerText = "Normal";
             } , 10000);
         }
@@ -96,7 +109,7 @@ function runGame() {
 function grow(len) {
     let tail = snake[snake.length - 1];
     for(i = 0; i < len; i++){
-        snake.push([...tail]);
+        snake.push([tail]);
     }
 };
 
@@ -139,7 +152,7 @@ function foodSpawn() {
 
     const rand = Math.floor(Math.random()*1000);
     if (rand%7 == 0)
-        foodType = 'goldenapple';
+        foodType = 'star';
     else if (rand%3 == 0)
         foodType = 'pie';
     else
@@ -168,17 +181,22 @@ function gameOver(cause) {
 }
 
 function draw() {
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if (foodType === 'carrot') ctx.fillStyle = "orange";
-    if (foodType === 'pie') ctx.fillStyle = "white";
-    if (foodType === 'goldenapple') ctx.fillStyle = "red";
+    text = '';
+    canvas.fillStyle = "#153d09";
+    canvas.fillRect(0, 0, canvasBlock.width, canvasBlock.height);
+    if (foodType === 'carrot')
+        text = '🥕';
+    if (foodType === 'pie')
+        text = '🥞';
+    if (foodType === 'star')
+        text = '🌟';
 
-    ctx.beginPath();
-    ctx.arc(foodX * gridSize + gridSize/2, foodY * gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = isImmune ? "gold" : "#4caf50";
+    canvas.beginPath();
+    canvas.textAlign = 'center';
+    canvas.font = `${gridSize}px serif`;
+    canvas.fillText(text, foodX*gridSize + gridSize/2, foodY*gridSize + gridSize);
+    canvas.fillStyle = isImmune ? "gold" : "#4caf50";
     for (let part of snake) {
-        ctx.fillRect(part[0] * gridSize + 1, part[1] * gridSize + 1, gridSize - 2, gridSize - 2);
+        canvas.fillRect(part[0] * gridSize + 1, part[1] * gridSize + 1, gridSize - 2, gridSize - 2);
     }
 }

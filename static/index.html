@@ -6,14 +6,14 @@
         <link href = "style.css" rel="stylesheet">
         <script src="javascript.js" defer></script>
     </head>
-    <body style="height:95vh;width:100vw">
+    <body style="height:95vh;width:95vw">
         <div id="RunningInfo" style="visibility:hidden;">
             Player : <span id = "player"></span> |
             Score : <span id="score">0</span> |
             Status : <span id="status">Normal</span>
         </div>
         <div id="GameContainer">
-            <canvas id="Canvas" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border:2px solid white; display:none">
+            <canvas id="Canvas" style="position:absolute; border:2px solid rgb(0, 255, 255); display:none">
             </canvas>
             <div id="StartScreen" style="position:absolute;display:block;">
                 <h2>HELLO!<br> WELCOME TO THE SNAKE GAME </h2>
@@ -26,9 +26,9 @@
                 <h2>INSTRUCTIONS</h2>
                 <p><strong>Rules:</strong> Use <b>Arrow Keys</b> or <b>WASD</b> to move. <br>Don't hit walls or yourself.</p>
                     <ul>
-                        <li> Carrot: +1 Health</li>
-                        <li> Pumpkin Pie: +3 Health</li>
-                        <li> Golden Apple: 10s Immunity</li>
+                        <li> 🥕 Carrot: +1 Health</li>
+                        <li> 🥞 Pie: +3 Health</li>
+                        <li> 🌟 Star: 10s Immunity</li>
                     </ul>
                 <button type="submit" id="StartButton">START</button>
             </div>
