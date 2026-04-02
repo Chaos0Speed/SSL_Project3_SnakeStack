@@ -3,8 +3,8 @@
         <meta charset="UTF-8" name="SSL_Project_Game"> 
         
         <title> Snake Stack Game</title>
-        <link href = "style.css" rel="stylesheet">
-        <script src="javascript.js" defer></script>
+        <link href = "static/style.css" rel="stylesheet">
+        <script src="static/javascript.js" defer></script>
     </head>
     <body style="height:95vh;width:95vw">
         <div id="RunningInfo" style="visibility:hidden;">
@@ -18,9 +18,11 @@
             <div id="StartScreen" style="position:absolute;display:block;">
                 <h2>HELLO!<br> WELCOME TO THE SNAKE GAME </h2>
                 To Enter the Game type your <br>
+                <form id="LoginForm">
                 Username : <input id = "username" type="text" placeholder="Enter your username" required><br>
                 Age : <input id = "age" type="number" placeholder="Enter your age" required><br>
                 <button type="submit" id="EnterButton">ENTER</button>
+                </form>
             </div>
             <div id="Instructions" style="display:none;position:absolute;">
                 <h2>INSTRUCTIONS</h2>

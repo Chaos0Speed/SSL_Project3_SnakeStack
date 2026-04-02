@@ -1,10 +1,11 @@
-enterbutton = document.getElementById("EnterButton");
+loginform = document.getElementById("LoginForm");
 startbutton = document.getElementById("StartButton");
 username = document.getElementById("username");
 player = document.getElementById("player");
 score = document.getElementById("score");
 
-enterbutton.onclick = () => {
+loginform.onsubmit = (event) => {
+    event.preventDefault();
     document.getElementById("StartScreen").style.display = "none";
     document.getElementById("Instructions").style.display = "block";
     player.innerText = username.value;
@@ -67,7 +68,7 @@ function startGame() {
 
 function runGame() {
     clearInterval(gameInterval);
-    gameInterval = setInterval(runGame, (120 - Math.min(100, currentScore)));
+    gameInterval = setInterval(runGame, (120 - 2*Math.min(50, currentScore)));
     let newHead = [snake[0][0] + dx, snake[0][1]+dy];
     snake.unshift(newHead);
     snake.pop();
@@ -176,6 +177,22 @@ function gameOver(cause) {
     document.getElementById("SurvivedTime").innerText = duration;
     document.getElementById("HighScore").innerText = currentHighScore;
     
+    const gameData = {
+        username: username.value,
+        age: document.getElementById("age").value,
+        score: currentScore,
+        survival_time: duration,
+        cause: cause
+    };
+
+    fetch('/save_score', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gameData)
+    })
+
     document.getElementById("Canvas").style.display = "none";
     document.getElementById("EndScreen").style.display = "block";
 }
