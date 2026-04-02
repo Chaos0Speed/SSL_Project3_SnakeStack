@@ -27,7 +27,7 @@ def save_score():
     
     # Save to your file
     with open(HISTORY, 'a') as f:
-        f.write(f"{name},{score},{duration}s,{cause},[{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}]\n")
+        f.write(f"{name},{score},{cause},{duration}s,[{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}]\n")
     
     return jsonify({"status": "success", "message": "Score recorded!"})
 
