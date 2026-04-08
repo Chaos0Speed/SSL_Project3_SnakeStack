@@ -1,0 +1,7 @@
+#Canvas {
+    position: absolute;
+    display: none;
+    box-sizing: content-box;
+    border: 16px solid transparent;
+    border-image: url('/static/border.jpg') 32 stretch;
+}

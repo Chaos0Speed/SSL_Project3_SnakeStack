@@ -59,8 +59,8 @@ function startGame() {
     document.getElementById("status").innerText = "Normal";
     clearTimeout(immtimeout);
     if (gameInterval) clearInterval(gameInterval);
-    const maxSize = Math.min(window.innerWidth * 0.85, window.innerHeight * 0.85);
-    tileCount = Math.floor(maxSize / gridSize);
+    const maxPossibleSize = Math.min(window.innerWidth * 0.85, window.innerHeight * 0.85);
+    tileCount = Math.floor(maxPossibleSize / gridSize);
     canvasBlock.width = canvasBlock.height = tileCount * gridSize;
     foodSpawn();
     gameInterval = setInterval(runGame, 120);
@@ -198,21 +198,35 @@ function gameOver(cause) {
 }
 
 function draw() {
+    
+    for( i = 0; i < tileCount; i++ ){
+        for( j = 0; j < tileCount; j++ ){
+            if(((i+j)%2) == 0)    canvas.fillStyle = "rgb(234, 250, 222)";
+            else                canvas.fillStyle = "rgb(191, 255, 138)";
+            canvas.fillRect(i*gridSize, j*gridSize, gridSize, gridSize);
+        }
+    }
+
     text = '';
-    canvas.fillStyle = "#153d09";
-    canvas.fillRect(0, 0, canvasBlock.width, canvasBlock.height);
-    if (foodType === 'carrot')
+    if (foodType === 'carrot'){
         text = '🥕';
-    if (foodType === 'pie')
+        canvas.font = `${gridSize}px serif`;
+    }
+    if (foodType === 'pie'){
         text = '🥞';
-    if (foodType === 'star')
+        canvas.font = `${Math.floor(gridSize * 0.85)}px serif`;
+    }
+    if (foodType === 'star'){
         text = '🌟';
+        canvas.font = `${Math.floor(gridSize * 0.85)}px serif`;
+    }
 
     canvas.beginPath();
+    canvas.fillStyle = "rgb(255, 255, 255, 5)";
     canvas.textAlign = 'center';
-    canvas.font = `${gridSize}px serif`;
-    canvas.fillText(text, foodX*gridSize + gridSize/2, foodY*gridSize + gridSize);
-    canvas.fillStyle = isImmune ? "gold" : "#4caf50";
+    canvas.textBaseline = 'middle';
+    canvas.fillText(text, foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
+    canvas.fillStyle = isImmune ? "gold" : "#16db1d";
     for (let part of snake) {
         canvas.fillRect(part[0] * gridSize + 1, part[1] * gridSize + 1, gridSize - 2, gridSize - 2);
     }
