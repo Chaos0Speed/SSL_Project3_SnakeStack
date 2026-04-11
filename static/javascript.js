@@ -198,36 +198,64 @@ function gameOver(cause) {
 }
 
 function draw() {
-    
-    for( i = 0; i < tileCount; i++ ){
-        for( j = 0; j < tileCount; j++ ){
-            if(((i+j)%2) == 0)    canvas.fillStyle = "rgb(234, 250, 222)";
-            else                canvas.fillStyle = "rgb(191, 255, 138)";
-            canvas.fillRect(i*gridSize, j*gridSize, gridSize, gridSize);
+
+    for (let i = 0; i < tileCount; i++) {
+        for (let j = 0; j < tileCount; j++) {
+            canvas.fillStyle = (i + j) % 2 === 0 ? "#111214" : "#0a0a0b";
+            canvas.fillRect(i * gridSize, j * gridSize, gridSize, gridSize);
         }
     }
 
-    text = '';
-    if (foodType === 'carrot'){
-        text = '🥕';
-        canvas.font = `${gridSize}px serif`;
-    }
-    if (foodType === 'pie'){
-        text = '🥞';
-        canvas.font = `${Math.floor(gridSize * 0.85)}px serif`;
-    }
-    if (foodType === 'star'){
-        text = '🌟';
-        canvas.font = `${Math.floor(gridSize * 0.85)}px serif`;
-    }
-
     canvas.beginPath();
-    canvas.fillStyle = "rgb(255, 255, 255, 5)";
-    canvas.textAlign = 'center';
-    canvas.textBaseline = 'middle';
-    canvas.fillText(text, foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
-    canvas.fillStyle = isImmune ? "gold" : "#16db1d";
-    for (let part of snake) {
-        canvas.fillRect(part[0] * gridSize + 1, part[1] * gridSize + 1, gridSize - 2, gridSize - 2);
+    for (let i = 0; i <= tileCount; i++) {
+        const position = i * gridSize + 0.5;
+        canvas.moveTo(position, 0);
+        canvas.lineTo(position, canvasBlock.width);
+        canvas.moveTo(0, position);
+        canvas.lineTo(canvasBlock.width, position);
     }
+    canvas.strokeStyle = "#1f1f21";
+    canvas.lineWidth = 5;
+    canvas.stroke();
+
+    canvas.strokeStyle = "#ffffff";
+    canvas.fillStyle = "#ffffff";
+    canvas.textAlign = "center";
+    canvas.textBaseline = "middle";
+    canvas.font = `${Math.floor(gridSize * 0.85)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", monospace`;
+
+    if (foodType === "carrot")
+        canvas.fillText("🥕", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
+    else if (foodType === "pie")
+        canvas.fillText("🥞", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
+    else if (foodType === "star") 
+        canvas.fillText("🌟", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
+
+    snake.forEach((part, index) => {
+        const x = part[0] * gridSize;
+        const y = part[1] * gridSize;
+
+        if (index == 0) {
+            canvas.fillStyle = isImmune ? "rgb(0, 243, 255)" : "rgb(255, 255, 255)";
+            canvas.fillRect(x + 2, y + 2, gridSize - 4, gridSize - 4);
+            canvas.strokeStyle = isImmune ? "rgb(0, 9, 21)" : "rgb(0, 0, 0)";
+            canvas.lineWidth = 2.5;
+            canvas.beginPath();
+            canvas.moveTo(x + 5, y + 5);
+            canvas.lineTo(x + gridSize - 5, y + gridSize - 5);
+            canvas.moveTo(x + gridSize - 5, y + 5);
+            canvas.lineTo(x + 5, y + gridSize - 5);
+            canvas.stroke();
+            return;
+        }
+
+        canvas.strokeStyle = isImmune ? "rgb(0, 243, 255)" : "rgb(255, 255, 255)";
+        canvas.lineWidth = 2;
+        canvas.strokeRect(x + 2.5, y + 2.5, gridSize - 5, gridSize - 5);
+        canvas.fillStyle = isImmune ? "rgba(0, 243, 255, 0.5)" : "rgba(255, 255, 255, 0.5)";
+        canvas.textAlign = "center";
+        canvas.textBaseline = "middle";
+        canvas.fillRect(x + 2, y + 2, gridSize-4, gridSize-4);
+    }
+    );
 }

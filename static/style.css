@@ -1,7 +1,191 @@
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    position: relative;
+    overflow: hidden;
+    background-color: #0a0a0b;
+    color: #ffffff;
+    font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(#1f1f21 0.5px, transparent 0.5px),
+        linear-gradient(90deg, #1f1f21 0.5px, transparent 0.5px);
+    background-size: 20px 20px;
+    opacity: 0.55;
+}
+
+#RunningInfo {
+    position: relative;
+    place-content: center;
+    top: 24px;
+    left: 5vh;
+    padding: 6px 8px;
+    border: 1px solid #ffffff;
+    background: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+#GameContainer {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 95vh;
+}
+
 #Canvas {
     position: absolute;
     display: none;
-    box-sizing: content-box;
-    border: 16px solid transparent;
-    border-image: url('/static/border.jpg') 32 stretch;
+    box-sizing: border-box;
+    border: 2px solid #ffffff;
+    background-color: #0a0a0b;
+    background-image:
+        linear-gradient(#1f1f21 0.5px, transparent 0.5px),
+        linear-gradient(90deg, #1f1f21 0.5px, transparent 0.5px);
+    background-size: 20px 20px;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 0 40px rgba(0, 0, 0, 0.45);
+}
+
+#StartScreen,
+#Instructions,
+#EndScreen {
+    z-index: 5;
+    min-width: min(460px, 78vw);
+    max-width: min(520px, 86vw);
+    padding: 28px 32px;
+    border: 1px solid #ffffff;
+    border-radius: 0;
+    background: rgba(10, 10, 11, 0.72);
+    text-align: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 18px 60px rgba(0, 0, 0, 0.35);
+}
+
+#StartScreen h2,
+#Instructions h2 {
+    margin: 0 0 16px;
+    font-size: clamp(1.25rem, 2vw, 1.7rem);
+    line-height: 1.4;
+}
+
+#StartScreen,
+#Instructions,
+#EndScreen,
+#LoginForm,
+#Instructions ul {
+    line-height: 1.7;
+}
+
+#StartScreen p,
+#Instructions p,
+#EndScreen p {
+    margin: 10px 0;
+}
+
+#Instructions ul {
+    margin: 12px auto 18px;
+    padding-left: 0;
+    list-style-position: inside;
+}
+
+input,
+button {
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+}
+
+input {
+    width: min(280px, 100%);
+    margin: 8px 0 14px;
+    padding: 10px 12px;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.04);
+    outline: none;
+    text-align: center;
+}
+
+input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+input:focus {
+    border-color: #00f3ff;
+    box-shadow: 0 0 0 1px #00f3ff;
+}
+
+button {
+    margin-top: 12px;
+    padding: 10px 18px;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 0;
+    background: #0a0a0b;
+    cursor: pointer;
+    transition:
+        background-color 140ms ease,
+        color 140ms ease,
+        box-shadow 140ms ease,
+        border-color 140ms ease;
+}
+
+button:hover,
+button:focus-visible {
+    color: #0a0a0b;
+    background: #ffffff;
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+}
+
+#RunningInfo span,
+#EndScreen span {
+    color: #00f3ff;
+}
+
+#StartScreen h2,
+#Instructions h2,
+#EndScreen strong {
+    letter-spacing: 0.08em;
+}
+
+@media (max-width: 640px) {
+    #RunningInfo {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        font-size: 0.85rem;
+    }
+
+    #StartScreen,
+    #Instructions,
+    #EndScreen {
+        min-width: unset;
+        width: min(88vw, 420px);
+        padding: 22px 20px;
+    }
+
+    input {
+        width: 100%;
+    }
 }
