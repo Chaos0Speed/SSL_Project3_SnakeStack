@@ -158,6 +158,29 @@ button:focus-visible {
     box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
 }
 
+.mode-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 12px auto 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.mode-label {
+    color: #ffffff;
+    font-size: 0.95rem;
+    text-transform: none;
+}
+
+.mode-label--state {
+    color: #00f3ff;
+    font-weight: 600;
+}
+
 #RunningInfo span,
 #EndScreen span {
     color: #00f3ff;
@@ -188,4 +211,53 @@ button:focus-visible {
     input {
         width: 100%;
     }
+}
+/* Container for the switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  margin-right: 10px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The visual slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+/* Action: when the checkbox is checked, change color and move slider */
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
 }
