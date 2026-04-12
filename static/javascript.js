@@ -11,6 +11,11 @@ loginform.onsubmit = (event) => {
     player.innerText = username.value;
 };
 
+const instructionsForm = document.getElementById("InstructionsForm");
+instructionsForm.onsubmit = (event) => {
+    event.preventDefault();
+};
+
 startbutton.onclick = () => {
     document.getElementById("Canvas").style.display = "block";
     document.getElementById("Instructions").style.display = "none";
@@ -28,10 +33,26 @@ document.getElementById("restart").onclick = () => {
     score.innerText = 0;
     startGame();
 };
+const toggle = document.getElementById('modeToggle');
+const speed = document.getElementById('speed');
+
+toggle.addEventListener('change', function() {
+    if (this.checked) {
+    speed.disabled = false;
+    speed.required = true;
+    speed.value = 40;
+    speed.focus();
+  } else {
+    speed.disabled = true;
+    speed.required = false;
+    speed.value = ""; 
+  }
+}
+);
 
 const canvasBlock = document.getElementById("Canvas");
 const canvas = canvasBlock.getContext("2d");
-const gridSize = 20;
+let gridSize = Number(document.getElementById("gridSize").value) || 40;
 let tileCount;
 
 let currentHighScore = 0;
@@ -59,16 +80,26 @@ function startGame() {
     document.getElementById("status").innerText = "Normal";
     clearTimeout(immtimeout);
     if (gameInterval) clearInterval(gameInterval);
+    gridSize = Number(document.getElementById("gridSize").value) || 40;
     const maxPossibleSize = Math.min(window.innerWidth * 0.85, window.innerHeight * 0.85);
     tileCount = Math.floor(maxPossibleSize / gridSize);
     canvasBlock.width = canvasBlock.height = tileCount * gridSize;
     foodSpawn();
-    gameInterval = setInterval(runGame, 120);
+
+    if (toggle.checked) {
+        const interval = 1000 / (Number(speed.value) || 40);
+        gameInterval = setInterval(runGame, interval);
+    } else {
+        gameInterval = setInterval(runGame, 150);
+    }
 };
 
 function runGame() {
-    clearInterval(gameInterval);
-    gameInterval = setInterval(runGame, (120 - 2*Math.min(50, currentScore)));
+    if(toggle.checked){
+        clearInterval(gameInterval);
+        gameInterval = setInterval(runGame, (150 - 2*Math.min(62.5, currentScore)));
+    }
+    console.log("running game")
     let newHead = [snake[0][0] + dx, snake[0][1]+dy];
     snake.unshift(newHead);
     snake.pop();
@@ -98,6 +129,7 @@ function runGame() {
                 isImmune = false;
                 clearInterval(immtimetimeout);
                 document.getElementById("status").innerText = "Normal";
+                removeExcess();
             } , 10000);
         }
         score.innerText = currentScore;
@@ -109,8 +141,8 @@ function runGame() {
 
 function grow(len) {
     let tail = snake[snake.length - 1];
-    for(i = 0; i < len; i++){
-        snake.push([tail]);
+    for (let i = 0; i < len; i++) {
+        snake.push([tail[0], tail[1]]);
     }
 };
 
@@ -258,4 +290,22 @@ function draw() {
         canvas.fillRect(x + 2, y + 2, gridSize-4, gridSize-4);
     }
     );
+}
+
+function removeExcess() {
+    if (snake.length <= 1) return;
+
+    const isAdjacent = (a, b) => {
+        const dx = Math.abs(a[0] - b[0]);
+        const dy = Math.abs(a[1] - b[1]);
+        return ((dx === 1 && dy === 0) || (dx === 0 && dy === 1));
+    };
+
+    for (let i = 1; i < snake.length; i++) {
+        const current = snake[i];
+        if (!isAdjacent(snake[i - 1], current)) {
+            snake.splice(i);
+            break;
+        }
+    }
 }
