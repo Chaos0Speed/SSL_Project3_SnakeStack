@@ -20,7 +20,7 @@
                 To Enter the Game type your <br>
                 <form id="LoginForm">
                 Username : <input id = "username" type="text" placeholder="Enter your username" required><br>
-                Age : <input id = "age" type="number" placeholder="Enter your age" required><br>
+                Age : <input id = "age" type="number" placeholder="Enter your age" min= "1" required><br>
                 <button type="submit" id="EnterButton">ENTER</button>
                 </form>
             </div>
@@ -32,14 +32,32 @@
                         <li> 🥞 Pie: +3 Health</li>
                         <li> 🌟 Star: 10s Immunity</li>
                     </ul>
-                <button type="submit" id="StartButton">START</button>
+                <form id="InstructionsForm">
+                    <label for="gridSize">Grid Size</label>
+                    <input type="number" id="gridSize" min="20" max="80" value="40" required>
+                    <br>
+                    Choose Speed Mode:
+                    <br>
+                    <div class="mode-row">
+                        <span class="mode-label">Variable Speed</span>
+                        <label class="switch">
+                            <input type="checkbox" id="modeToggle">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="mode-label mode-label--state">Constant speed</span>
+                    </div>
+
+                    <label for="speed">Speed [Blocks per S] :</label>
+                    <input type="number" id="speed" min="1" max="50" disabled>
+                    <button type="button" id="StartButton">START</button>
+                </form>
             </div>
             <div id="EndScreen" style="display:none;position:absolute;">
                 <p><strong>Cause of Death:</strong> <span id="Cause"></span></p>
                 <p><strong>Final Score:</strong> <span id="finalScore"></span></p>
                 <p><strong>Time Survived:</strong> <span id="SurvivedTime"></span></p>
                 <p><strong>Session High Score:</strong> <span id="HighScore"></span></p>
-                <button type="submit" id="restart"> RESTART </button>
+                <button type="button" id="restart">RESTART</button>
             </div>
         </div>  
     </body>
