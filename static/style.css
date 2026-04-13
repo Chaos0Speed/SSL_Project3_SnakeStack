@@ -170,14 +170,15 @@ button:focus-visible {
     background: rgba(255, 255, 255, 0.04);
 }
 
-.mode-label {
+#mode-label2{
     color: #ffffff;
     font-size: 0.95rem;
-    text-transform: none;
+    font-weight: 600;
 }
 
-.mode-label--state {
+#mode-label1 {
     color: #00f3ff;
+    font-size: 0.95rem;
     font-weight: 600;
 }
 

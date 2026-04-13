@@ -38,14 +38,18 @@ const speed = document.getElementById('speed');
 
 toggle.addEventListener('change', function() {
     if (this.checked) {
-    speed.disabled = false;
-    speed.required = true;
-    speed.value = 40;
-    speed.focus();
-  } else {
-    speed.disabled = true;
-    speed.required = false;
-    speed.value = ""; 
+        document.getElementById("mode-label2").style = "color : rgb(0, 243, 255)";
+        document.getElementById("mode-label1").style = "color : rgb(255, 255, 255)";
+        speed.disabled = false;
+        speed.required = true;
+        speed.value = 40;
+        speed.focus();
+    } else {
+        document.getElementById("mode-label1").style = "color : rgb(0, 243, 255)";
+        document.getElementById("mode-label2").style = "color : rgb(255, 255, 255)";
+        speed.disabled = true;
+        speed.required = false;
+        speed.value = ""; 
   }
 }
 );
@@ -306,6 +310,16 @@ function removeExcess() {
         if (!isAdjacent(snake[i - 1], current)) {
             snake.splice(i);
             break;
+        }
+    }
+
+    for (let i = 1; i < snake.length; i++) {
+        const current = snake[i];
+        for(let j = i+1; j < snake.length; j++){
+            if (current[0] == snake[j][0] && current[1] == snake[j][1]){
+                snake.splice(i);
+                return;
+            }
         }
     }
 }
