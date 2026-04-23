@@ -1,0 +1,7 @@
+To start the server run:
+`python3 app.py` in the terminal.
+Then clcik on the link displayed to open the game.
+
+For the History review and other stuff run :
+`bash admin.sh`
+
