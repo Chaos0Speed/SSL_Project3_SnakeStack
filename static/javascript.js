@@ -38,14 +38,14 @@ const speed = document.getElementById('speed');
 
 toggle.addEventListener('change', function() {
     if (this.checked) {
-        document.getElementById("mode-label2").style = "color : rgb(0, 243, 255)";
+        document.getElementById("mode-label2").style = "color : rgb(212, 175, 55)";
         document.getElementById("mode-label1").style = "color : rgb(255, 255, 255)";
         speed.disabled = false;
         speed.required = true;
         speed.value = 40;
         speed.focus();
     } else {
-        document.getElementById("mode-label1").style = "color : rgb(0, 243, 255)";
+        document.getElementById("mode-label1").style = "color : rgb(212, 175, 55)";
         document.getElementById("mode-label2").style = "color : rgb(255, 255, 255)";
         speed.disabled = true;
         speed.required = false;
@@ -68,12 +68,22 @@ let snake = [];
 let dx = 0;
 let dy = 0;
 
+let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let isPaused = false;
+
 document.addEventListener("keydown", (e) => {
-    if ((e.key === "ArrowUp"  || e.key === "w"|| e.key === "W") && dy !== 1) { dx = 0; dy = -1; }
-    if ((e.key === "ArrowDown" || e.key === "s" || e.key === "S") && dy !== -1) { dx = 0; dy = 1; }
-    if ((e.key === "ArrowLeft" || e.key === "a"|| e.key === "A") && dx !== 1) { dx = -1; dy = 0; }
-    if ((e.key === "ArrowRight" || e.key === "d"|| e.key === "D") && dx !== -1) { dx = 1; dy = 0; }
+    if (e.key === " " || e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        togglePause();
+        return;
+    }
+    if(isPaused) return;
+    if ((e.key === "ArrowUp" || e.key === "w" || e.key === "W") && dy !== 1) { dx = 0; dy = -1; playTurnSound(); }
+    if ((e.key === "ArrowDown" || e.key === "s" || e.key === "S") && dy !== -1) { dx = 0; dy = 1; playTurnSound(); }
+    if ((e.key === "ArrowLeft" || e.key === "a" || e.key === "A") && dx !== 1) { dx = -1; dy = 0; playTurnSound(); }
+    if ((e.key === "ArrowRight" || e.key === "d" || e.key === "D") && dx !== -1) { dx = 1; dy = 0; playTurnSound(); }
 });
+
 
 function startGame() {
     currentScore = 0;
@@ -111,6 +121,7 @@ function runGame() {
     if (checkCollision()) return;
 
     if (newHead[0] === foodX && newHead[1] === foodY) {
+        playEatSound();
         if (foodType == 'carrot') {
             grow(1);
             currentScore += 1;
@@ -233,69 +244,6 @@ function gameOver(cause) {
     document.getElementById("EndScreen").style.display = "block";
 }
 
-function draw() {
-
-    for (let i = 0; i < tileCount; i++) {
-        for (let j = 0; j < tileCount; j++) {
-            canvas.fillStyle = (i + j) % 2 === 0 ? "#111214" : "#0a0a0b";
-            canvas.fillRect(i * gridSize, j * gridSize, gridSize, gridSize);
-        }
-    }
-
-    canvas.beginPath();
-    for (let i = 0; i <= tileCount; i++) {
-        const position = i * gridSize + 0.5;
-        canvas.moveTo(position, 0);
-        canvas.lineTo(position, canvasBlock.width);
-        canvas.moveTo(0, position);
-        canvas.lineTo(canvasBlock.width, position);
-    }
-    canvas.strokeStyle = "#1f1f21";
-    canvas.lineWidth = 5;
-    canvas.stroke();
-
-    canvas.strokeStyle = "#ffffff";
-    canvas.fillStyle = "#ffffff";
-    canvas.textAlign = "center";
-    canvas.textBaseline = "middle";
-    canvas.font = `${Math.floor(gridSize * 0.85)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", monospace`;
-
-    if (foodType === "carrot")
-        canvas.fillText("🥕", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
-    else if (foodType === "pie")
-        canvas.fillText("🥞", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
-    else if (foodType === "star") 
-        canvas.fillText("🌟", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
-
-    snake.forEach((part, index) => {
-        const x = part[0] * gridSize;
-        const y = part[1] * gridSize;
-
-        if (index == 0) {
-            canvas.fillStyle = isImmune ? "rgb(0, 243, 255)" : "rgb(255, 255, 255)";
-            canvas.fillRect(x + 2, y + 2, gridSize - 4, gridSize - 4);
-            canvas.strokeStyle = isImmune ? "rgb(0, 9, 21)" : "rgb(0, 0, 0)";
-            canvas.lineWidth = 2.5;
-            canvas.beginPath();
-            canvas.moveTo(x + 5, y + 5);
-            canvas.lineTo(x + gridSize - 5, y + gridSize - 5);
-            canvas.moveTo(x + gridSize - 5, y + 5);
-            canvas.lineTo(x + 5, y + gridSize - 5);
-            canvas.stroke();
-            return;
-        }
-
-        canvas.strokeStyle = isImmune ? "rgb(0, 243, 255)" : "rgb(255, 255, 255)";
-        canvas.lineWidth = 2;
-        canvas.strokeRect(x + 2.5, y + 2.5, gridSize - 5, gridSize - 5);
-        canvas.fillStyle = isImmune ? "rgba(0, 243, 255, 0.5)" : "rgba(255, 255, 255, 0.5)";
-        canvas.textAlign = "center";
-        canvas.textBaseline = "middle";
-        canvas.fillRect(x + 2, y + 2, gridSize-4, gridSize-4);
-    }
-    );
-}
-
 function removeExcess() {
     if (snake.length <= 1) return;
 
@@ -323,3 +271,117 @@ function removeExcess() {
         }
     }
 }
+
+// Modified draw() function
+function draw() {
+    canvas.clearRect(0, 0, canvasBlock.width, canvasBlock.height);
+
+    for (let i = 0; i < tileCount; i++) {
+        for (let j = 0; j < tileCount; j++) {
+            canvas.fillStyle = (i + j) % 2 === 0 ? "rgb(25, 25, 25)" : "rgb(35, 35, 35)";
+            canvas.fillRect(i * gridSize, j * gridSize, gridSize, gridSize);
+        }
+    }
+
+    canvas.beginPath();
+    for (let i = 0; i <= tileCount; i++) {
+        const position = i * gridSize + 0.5;
+        canvas.moveTo(position, 0);
+        canvas.lineTo(position, canvasBlock.width);
+        canvas.moveTo(0, position);
+        canvas.lineTo(canvasBlock.width, position);
+    }
+    canvas.strokeStyle = "rgb(35, 35, 35)";
+    canvas.lineWidth = 5;
+    canvas.stroke();
+
+    canvas.strokeStyle = "rgb(200, 200, 200)";
+    canvas.fillStyle = "rgb(220, 220, 220)";
+    canvas.textAlign = "center";
+    canvas.textBaseline = "middle";
+    canvas.font = `${Math.floor(gridSize * 0.85)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", monospace`;
+
+    if (foodType === "carrot")
+        canvas.fillText("🥕", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
+    else if (foodType === "pie")
+        canvas.fillText("🥞", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
+    else if (foodType === "star") 
+        canvas.fillText("🌟", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
+
+    let headRotation = 0; 
+    canvas.save();
+    canvas.translate(snake[0][0] * gridSize + gridSize / 2, snake[0][1] * gridSize + gridSize / 2);
+    canvas.rotate(headRotation);
+    canvas.translate(-gridSize / 2, -gridSize / 2);
+
+    let pulseScale = isPaused ? 1.0 + 0.02 * Math.sin(Date.now() * 0.005) : 1.0;
+    canvas.scale(pulseScale, pulseScale);
+
+    canvas.fillStyle = "rgb(212, 175, 55)";
+    canvas.fillRect(2, 2, gridSize - 4, gridSize - 4);
+    canvas.strokeStyle = "#1A1A1B";
+    canvas.lineWidth = 2.5;
+    canvas.beginPath();
+    canvas.moveTo(5, 5);
+    canvas.lineTo(gridSize - 5, gridSize - 5);
+    canvas.moveTo(gridSize - 5, 5);
+    canvas.lineTo(5, gridSize - 5);
+    canvas.stroke();
+
+    canvas.restore();
+
+    snake.forEach((part, index) => {
+        if (index === 0) return;
+
+        const x = part[0] * gridSize;
+        const y = part[1] * gridSize;
+
+        const ratio = 1 - 0.5 * ((index) / (snake.length));
+        const opacity = ratio*0.8 + 0.2;
+        const inset = (1-ratio)*gridSize*0.5;
+
+        canvas.strokeStyle = `rgba(165, 135, 15, ${opacity})`;
+        canvas.lineWidth = 2;
+        canvas.strokeRect(x + inset + 1, y + inset + 1, gridSize*ratio - 2, gridSize*ratio - 2);
+        canvas.fillStyle = `rgba(165, 135, 15, ${opacity})`;
+        canvas.fillRect(x + inset + 2, y + inset + 2, gridSize*ratio - 4, gridSize*ratio - 4);
+    });
+}
+
+function playTurnSound() {
+    let oscillator = audioContext.createOscillator();
+    let gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.frequency.setValueAtTime(2000, audioContext.currentTime); // High-freq
+    oscillator.type = 'square';
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
+function playEatSound() {
+    let oscillator = audioContext.createOscillator();
+    let gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.frequency.setValueAtTime(100, audioContext.currentTime); // Low-freq
+    oscillator.type = 'sawtooth';
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+}
+
+function togglePause() {
+    isPaused = !isPaused;
+    if (isPaused) {
+        clearInterval(gameInterval);
+        gameInterval = null;
+    } else {
+        const interval = toggle.checked ? 1000 / (Number(speed.value) || 40) : 150;
+        gameInterval = setInterval(runGame, interval);
+    }
+}
+
