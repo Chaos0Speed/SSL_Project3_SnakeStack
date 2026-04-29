@@ -4,6 +4,7 @@ username = document.getElementById("username");
 player = document.getElementById("player");
 score = document.getElementById("score");
 
+//First submit buuton on userlogin page
 loginform.onsubmit = (event) => {
     event.preventDefault();
     document.getElementById("StartScreen").style.display = "none";
@@ -11,11 +12,13 @@ loginform.onsubmit = (event) => {
     player.innerText = username.value;
 };
 
+//submit after instructions and chossing prefernces
 const instructionsForm = document.getElementById("InstructionsForm");
 instructionsForm.onsubmit = (event) => {
     event.preventDefault();
 };
 
+//starting the game after start button on instructions page
 startbutton.onclick = () => {
     document.getElementById("Canvas").style.display = "block";
     document.getElementById("Instructions").style.display = "none";
@@ -25,6 +28,7 @@ startbutton.onclick = () => {
     startGame();
 };
 
+//restart button on endscreen
 document.getElementById("restart").onclick = () => {
     document.getElementById("EndScreen").style.display = "none";
     document.getElementById("Canvas").style.display = "block";
@@ -33,7 +37,7 @@ document.getElementById("restart").onclick = () => {
     score.innerText = 0;
     startGame();
 };
-
+ //home button on end screen
 document.getElementById("home").onclick = () => {
     document.getElementById("EndScreen").style.display = "none";
     document.getElementById("StartScreen").style.display = "block";
@@ -41,9 +45,10 @@ document.getElementById("home").onclick = () => {
     document.getElementById("RunningInfo").style.visibility = "hidden";
 };
 
-const toggle = document.getElementById('modeToggle');
-const speed = document.getElementById('speed');
+const toggle = document.getElementById('modeToggle');    //speedmode toggle
+const speed = document.getElementById('speed');        //if constant speed its value
 
+//css part for toggle change
 toggle.addEventListener('change', function() {
     if (this.checked) {
         document.getElementById("mode-label2").style = "color : rgb(212, 175, 55)";
@@ -62,6 +67,7 @@ toggle.addEventListener('change', function() {
 }
 );
 
+//elemts and variables
 const canvasBlock = document.getElementById("Canvas");
 const canvas = canvasBlock.getContext("2d");
 const pauseMenu = document.getElementById("PauseMenu");
@@ -79,6 +85,7 @@ let dy = 0;
 
 let isPaused = false;
 
+//movement keys
 document.addEventListener("keydown", (e) => {
     if (e.key === " " || e.key === "p" || e.key === "P") {
         e.preventDefault();
@@ -92,7 +99,7 @@ document.addEventListener("keydown", (e) => {
     if ((e.key === "ArrowRight" || e.key === "d" || e.key === "D") && dx !== -1) { dx = 1; dy = 0; }
 });
 
-
+//function to begin the game, finding size, and started variables
 function startGame() {
     currentScore = 0;
     snake = [[0,0]];
@@ -113,7 +120,7 @@ function startGame() {
         gameInterval = setInterval(runGame, 150);
     }
 };
-
+//runGame function, check collisions, set speed and check foodeat
 function runGame() {
     if(toggle.checked){
         clearInterval(gameInterval);
@@ -211,12 +218,13 @@ function foodSpawn() {
     else
         foodType = 'carrot';    // 525/1000
 
-    for (let part of snake) {
+    for (let part of snake) {                    // make sure food isnt spawned on the snake
         if(part[0] === foodX && part[1] === foodY)
             foodSpawn();
     }
 }
 
+//contains post to flask throuh API
 function gameOver(cause) {
     clearInterval(gameInterval);
     const duration = Math.floor((Date.now() - startTime) / 1000);
@@ -249,6 +257,7 @@ function gameOver(cause) {
     document.getElementById("EndScreen").style.display = "block";
 }
 
+//after end of immunity removeExcess part. Clearly mentioned in report
 function removeExcess() {
     if (snake.length <= 1) return;
 
@@ -277,6 +286,7 @@ function removeExcess() {
     }
 }
 
+//randomizing function for flickering sheild when immunoty times is less than 1 second.
 function shouldDrawShield() {
     if (!isImmune) return false;
     if (immtime > 1) return true;
@@ -292,7 +302,8 @@ function draw() {
             canvas.fillRect(i * gridSize, j * gridSize, gridSize, gridSize);
         }
     }
-
+    
+    // draw the food
     canvas.beginPath();
     for (let i = 0; i <= tileCount; i++) {
         const position = i * gridSize + 0.5;
@@ -318,6 +329,8 @@ function draw() {
     else if (foodType === "star") 
         canvas.fillText("🌟", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
 
+
+    //draw the head part
     let headRotation = 0;
     if (dx === 1) headRotation = 0;
     else if (dx === -1) headRotation = Math.PI;
@@ -338,7 +351,7 @@ function draw() {
     canvas.beginPath();
     canvas.roundRect(headInset, headInset, headSize, headSize, headRadius);
     canvas.fill();
-
+    //if sheilsd paint it's insides
     if (shieldVisible) {
         canvas.fillStyle = "rgba(120, 195, 255, 0.5)";
         canvas.beginPath();
@@ -382,14 +395,14 @@ function draw() {
     canvas.stroke();
 
     canvas.restore();
-
+    //draw each snake body
     snake.forEach((part, index) => {
         if (index === 0) return;
 
         const x = part[0] * gridSize;
         const y = part[1] * gridSize;
 
-        const ratio = 1 - 0.5 * (index / snake.length);
+        const ratio = 1 - 0.5 * (index / snake.length);    //ratio to reduce size and opacity with length
         const opacity = ratio * 0.8 + 0.2;
         const inset = (1 - ratio) * gridSize * 0.5;
         const bodyLeft = x + inset + 1.5;
@@ -428,6 +441,7 @@ function draw() {
     if (shieldVisible) drawSheildOutline();
 }
 
+// pause function when pressed 'p' or space
 function togglePause() {
     isPaused = !isPaused;
     if (isPaused) {
@@ -465,6 +479,7 @@ document.getElementById("homePause").onclick = () => {
     document.getElementById("StartScreen").style.display = "block";
 };
 
+//draw sheild outline while checking for adjacent blocks
 function drawSheildOutline() {
     canvas.save();
     canvas.strokeStyle = "rgba(90, 170, 255, 0.95)";
