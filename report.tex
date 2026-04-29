@@ -297,7 +297,7 @@ Also given sufficient longer time new features could also be implemented.
 
 \noindent\begin{minipage}{\linewidth}
 \textbf{Grid size and Canvas sizing in JavaScript:}
-\begin{lstlisting}[language=JavaScript]
+\begin{lstlisting}[]
 const maxPossibleSize = Math.min(window.innerWidth * 0.85, window.innerHeight * 0.85);
 tileCount = Math.floor(maxPossibleSize / gridSize);
 canvasBlock.width = canvasBlock.height = tileCount * gridSize;
@@ -307,7 +307,7 @@ canvasBlock.width = canvasBlock.height = tileCount * gridSize;
 
 \noindent\begin{minipage}{\linewidth}
 \textbf{Variable speed update in Game Loop:}
-\begin{lstlisting}[language=JavaScript]
+\begin{lstlisting}[]
 if (toggle.checked) {
     clearInterval(gameInterval);
     gameInterval = setInterval(runGame, (150 - 2 * Math.min(70, currentScore)));
@@ -318,7 +318,7 @@ if (toggle.checked) {
 
 \noindent\begin{minipage}{\linewidth}
 \textbf{Sending game result to Flask backend:}
-\begin{lstlisting}[language=JavaScript]
+\begin{lstlisting}[]
 const gameData = {
     username: username.value,
     age: document.getElementById("age").value,
