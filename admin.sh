@@ -11,6 +11,12 @@ NC='\033[0m'
 
 USER_SELECTED=""
 
+# check file
+if [ ! -f "$FILE" ]; then
+    echo "history.txt not found!"
+    exit 1
+fi
+
 while true
 do
     clear
@@ -26,15 +32,14 @@ do
 
     read -p "Enter choice: " choice
 
-    # 1. select user (with validation)
     if [ "$choice" = "1" ]; then
         echo "Users available:"
-        cut -d',' -f1 "$FILE" | sort | uniq
+        awk -F',' '{print $1}' "$FILE" | sort | uniq
         echo ""
 
         read -p "Enter username: " temp_user
 
-        if grep -q "^$temp_user," "$FILE"; then
+        if awk -F',' -v u="$temp_user" '$1==u{found=1} END{exit !found}' "$FILE"; then
             USER_SELECTED="$temp_user"
             echo -e "${GREEN}Now working with: $USER_SELECTED${NC}"
         else
@@ -44,7 +49,6 @@ do
 
         read -p "Press enter..."
 
-    # 2. view recent games
     elif [ "$choice" = "2" ]; then
         if [ -z "$USER_SELECTED" ]; then
             echo -e "${RED}No user selected${NC}"
@@ -52,7 +56,8 @@ do
             echo "Showing last games for $USER_SELECTED"
             echo ""
 
-            grep "^$USER_SELECTED," "$FILE" | tail -n 20 | while IFS=',' read u sc cause dur ts
+            awk -F',' -v u="$USER_SELECTED" '$1==u' "$FILE" | tail -n 20 | \
+            while IFS=',' read u sc cause dur ts
             do
                 if [ "$cause" = "wall" ]; then
                     cause_col="${BLUE}$cause${NC}"
@@ -67,39 +72,50 @@ do
         fi
         read -p "Press enter..."
 
-    # 3. analytics
     elif [ "$choice" = "3" ]; then
         read -p "Enter timestamp limit (or press enter): " TS
-
-        if [ -z "$TS" ]; then
-            DATA=$(cat "$FILE")
-        else
-            DATA=$(awk -F',' -v t="$TS" '$5 <= t' "$FILE")
-        fi
 
         echo ""
         echo "Basic stats:"
 
-        echo "$DATA" | awk -F',' '
-        BEGIN {s=0; d=0; c=0; w=0; se=0; en=0}
-        {
-            s+=$2; d+=$4; c++
-            if($3=="wall") w++
-            else if($3=="self") se++
-            else if($3=="enemy") en++
-        }
-        END{
-            if(c==0){print "No data found"; exit}
-            print "Avg score:", s/c
-            print "Avg duration:", d/c
-            print "Wall deaths:", w/c
-            print "Self deaths:", se/c
-            print "Enemy deaths:", en/c
-        }'
+        if [ -z "$TS" ]; then
+            awk -F',' '
+            BEGIN {s=0; d=0; c=0; w=0; se=0; en=0}
+            NF==5 {
+                s+=$2; d+=$4; c++
+                if($3=="wall") w++
+                else if($3=="self") se++
+                else if($3=="enemy") en++
+            }
+            END{
+                if(c==0){print "No data found"; exit}
+                print "Avg score:", s/c
+                print "Avg duration:", d/c
+                print "Wall deaths:", w/c
+                print "Self deaths:", se/c
+                print "Enemy deaths:", en/c
+            }' "$FILE"
+        else
+            awk -F',' -v t="$TS" '
+            BEGIN {s=0; d=0; c=0; w=0; se=0; en=0}
+            NF==5 && $5 <= t {
+                s+=$2; d+=$4; c++
+                if($3=="wall") w++
+                else if($3=="self") se++
+                else if($3=="enemy") en++
+            }
+            END{
+                if(c==0){print "No data found"; exit}
+                print "Avg score:", s/c
+                print "Avg duration:", d/c
+                print "Wall deaths:", w/c
+                print "Self deaths:", se/c
+                print "Enemy deaths:", en/c
+            }' "$FILE"
+        fi
 
         read -p "Press enter..."
 
-    # 4. delete entries
     elif [ "$choice" = "4" ]; then
         echo "Delete options:"
         echo "1. By username"
@@ -107,11 +123,13 @@ do
         echo "3. Remove bad lines"
         read -p "Choice: " ch
 
+        TMP_FILE=$(mktemp)
+
         if [ "$ch" = "1" ]; then
             read -p "Enter username: " u
             read -p "Are you sure? (y/n): " c
             if [ "$c" = "y" ]; then
-                grep -v "^$u," "$FILE" > tmp && mv tmp "$FILE"
+                awk -F',' -v user="$u" '$1!=user' "$FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$FILE"
                 echo "Done"
             fi
 
@@ -119,25 +137,80 @@ do
             read -p "Enter timestamp: " t
             read -p "Are you sure? (y/n): " c
             if [ "$c" = "y" ]; then
-                awk -F',' -v x="$t" '$5!=x' "$FILE" > tmp && mv tmp "$FILE"
+                awk -F',' -v x="$t" '$5!=x' "$FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$FILE"
                 echo "Done"
             fi
 
         elif [ "$ch" = "3" ]; then
-            awk -F',' 'NF==5' "$FILE" > tmp && mv tmp "$FILE"
+            awk -F',' 'NF==5' "$FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$FILE"
             echo "Cleaned invalid lines"
+
+        else
+            echo "Invalid option"
         fi
 
         read -p "Press enter..."
 
-    # 5. log rotation
     elif [ "$choice" = "5" ]; then
-        cp "$FILE" "backup_$(date +%s).txt"
-        tail -n 10 "$FILE" > tmp && mv tmp "$FILE"
-        echo "Backup made and file trimmed"
+        echo "Log rotation menu:"
+        echo "1. Rotate logs"
+        echo "2. Restore from backup"
+        read -p "Choice: " sub
+
+        if [ "$sub" = "1" ]; then
+            BACKUP="backup_$(date +%Y-%m-%d_%H-%M-%S).tar.gz"
+
+            tar -czf "$BACKUP" "$FILE"
+
+            TMP_FILE=$(mktemp)
+
+            awk '{
+                lines[NR]=$0
+            }
+            END{
+                start = (NR > 10) ? NR-9 : 1
+                for(i=start;i<=NR;i++) print lines[i]
+            }' "$FILE" > "$TMP_FILE"
+
+            mv "$TMP_FILE" "$FILE"
+
+            echo "Backup created: $BACKUP"
+            echo "Trimmed to last 10 entries"
+
+            COUNT=$(ls backup_*.tar.gz 2>/dev/null | wc -l)
+            if [ "$COUNT" -gt 5 ]; then
+                ls -t backup_*.tar.gz | awk 'NR>5' | while read old
+                do
+                    rm -f "$old"
+                done
+                echo "Old backups cleaned"
+            fi
+
+        elif [ "$sub" = "2" ]; then
+            echo "Available backups:"
+            ls backup_*.tar.gz 2>/dev/null || echo "No backups found"
+
+            read -p "Enter backup file name: " bfile
+
+            if [ -f "$bfile" ]; then
+                read -p "Overwrite current history? (y/n): " c
+
+                if [ "$c" = "y" ]; then
+                    tar -xzf "$bfile"
+                    echo "Restored from $bfile"
+                else
+                    echo "Cancelled"
+                fi
+            else
+                echo "Backup not found"
+            fi
+
+        else
+            echo "Invalid option"
+        fi
+
         read -p "Press enter..."
 
-    # 6. sorting
     elif [ "$choice" = "6" ]; then
         echo "Sort by:"
         echo "1. Timestamp"
@@ -149,11 +222,14 @@ do
             sort -t',' -k1 "$FILE" | less
         elif [ "$ch" = "3" ]; then
             sort -t',' -k2 -n "$FILE" | less
-        else
+        elif [ "$ch" = "1" ]; then
             sort -t',' -k5 -n "$FILE" | less
+        else
+            echo "Invalid option"
         fi
 
-    # 7. exit
+        read -p "Press enter..."
+
     elif [ "$choice" = "7" ]; then
         exit 0
 
