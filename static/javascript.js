@@ -33,6 +33,14 @@ document.getElementById("restart").onclick = () => {
     score.innerText = 0;
     startGame();
 };
+
+document.getElementById("home").onclick = () => {
+    document.getElementById("EndScreen").style.display = "none";
+    document.getElementById("StartScreen").style.display = "block";
+    document.getElementById("Canvas").style.display = "none";
+    document.getElementById("RunningInfo").style.visibility = "hidden";
+};
+
 const toggle = document.getElementById('modeToggle');
 const speed = document.getElementById('speed');
 
@@ -56,7 +64,8 @@ toggle.addEventListener('change', function() {
 
 const canvasBlock = document.getElementById("Canvas");
 const canvas = canvasBlock.getContext("2d");
-let gridSize = Number(document.getElementById("gridSize").value) || 40;
+const pauseMenu = document.getElementById("PauseMenu");
+let gridSize = Number(document.getElementById("gridSize").value);
 let tileCount;
 
 let currentHighScore = 0;
@@ -68,7 +77,6 @@ let snake = [];
 let dx = 0;
 let dy = 0;
 
-let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let isPaused = false;
 
 document.addEventListener("keydown", (e) => {
@@ -78,10 +86,10 @@ document.addEventListener("keydown", (e) => {
         return;
     }
     if(isPaused) return;
-    if ((e.key === "ArrowUp" || e.key === "w" || e.key === "W") && dy !== 1) { dx = 0; dy = -1; playTurnSound(); }
-    if ((e.key === "ArrowDown" || e.key === "s" || e.key === "S") && dy !== -1) { dx = 0; dy = 1; playTurnSound(); }
-    if ((e.key === "ArrowLeft" || e.key === "a" || e.key === "A") && dx !== 1) { dx = -1; dy = 0; playTurnSound(); }
-    if ((e.key === "ArrowRight" || e.key === "d" || e.key === "D") && dx !== -1) { dx = 1; dy = 0; playTurnSound(); }
+    if ((e.key === "ArrowUp" || e.key === "w" || e.key === "W") && dy !== 1) { dx = 0; dy = -1;}
+    if ((e.key === "ArrowDown" || e.key === "s" || e.key === "S") && dy !== -1) { dx = 0; dy = 1; }
+    if ((e.key === "ArrowLeft" || e.key === "a" || e.key === "A") && dx !== 1) { dx = -1; dy = 0; }
+    if ((e.key === "ArrowRight" || e.key === "d" || e.key === "D") && dx !== -1) { dx = 1; dy = 0; }
 });
 
 
@@ -94,15 +102,13 @@ function startGame() {
     document.getElementById("status").innerText = "Normal";
     clearTimeout(immtimeout);
     if (gameInterval) clearInterval(gameInterval);
-    gridSize = Number(document.getElementById("gridSize").value) || 40;
     const maxPossibleSize = Math.min(window.innerWidth * 0.85, window.innerHeight * 0.85);
     tileCount = Math.floor(maxPossibleSize / gridSize);
     canvasBlock.width = canvasBlock.height = tileCount * gridSize;
     foodSpawn();
 
     if (toggle.checked) {
-        const interval = 1000 / (Number(speed.value) || 40);
-        gameInterval = setInterval(runGame, interval);
+        gameInterval = setInterval(runGame, (1000 / (Number(speed.value) || 40)));
     } else {
         gameInterval = setInterval(runGame, 150);
     }
@@ -111,7 +117,7 @@ function startGame() {
 function runGame() {
     if(toggle.checked){
         clearInterval(gameInterval);
-        gameInterval = setInterval(runGame, (150 - 2*Math.min(62.5, currentScore)));
+        gameInterval = setInterval(runGame, (150 - 2*Math.min(70, currentScore)));
     }
     console.log("running game")
     let newHead = [snake[0][0] + dx, snake[0][1]+dy];
@@ -121,7 +127,6 @@ function runGame() {
     if (checkCollision()) return;
 
     if (newHead[0] === foodX && newHead[1] === foodY) {
-        playEatSound();
         if (foodType == 'carrot') {
             grow(1);
             currentScore += 1;
@@ -199,12 +204,12 @@ function foodSpawn() {
     foodY = Math.floor(Math.random() * tileCount);
 
     const rand = Math.floor(Math.random()*1000);
-    if (rand%7 == 0)
-        foodType = 'star';
-    else if (rand%3 == 0)
-        foodType = 'pie';
+    if (rand%7 == 0)            
+        foodType = 'star';      // 142/1000
+    else if (rand%3 == 0)       
+        foodType = 'pie';       // 333/1000
     else
-        foodType = 'carrot';
+        foodType = 'carrot';    // 525/1000
 
     for (let part of snake) {
         if(part[0] === foodX && part[1] === foodY)
@@ -272,7 +277,12 @@ function removeExcess() {
     }
 }
 
-// Modified draw() function
+function shouldDrawShield() {
+    if (!isImmune) return false;
+    if (immtime > 1) return true;
+    return Math.floor(Date.now() / 120) % 2 === 0;
+}
+
 function draw() {
     canvas.clearRect(0, 0, canvasBlock.width, canvasBlock.height);
 
@@ -308,24 +318,67 @@ function draw() {
     else if (foodType === "star") 
         canvas.fillText("🌟", foodX * gridSize + gridSize / 2, foodY * gridSize + gridSize / 2);
 
-    let headRotation = 0; 
+    let headRotation = 0;
+    if (dx === 1) headRotation = 0;
+    else if (dx === -1) headRotation = Math.PI;
+    else if (dy === -1) headRotation = -Math.PI / 2;
+    else if (dy === 1) headRotation = Math.PI / 2;
+
     canvas.save();
     canvas.translate(snake[0][0] * gridSize + gridSize / 2, snake[0][1] * gridSize + gridSize / 2);
     canvas.rotate(headRotation);
     canvas.translate(-gridSize / 2, -gridSize / 2);
 
-    let pulseScale = isPaused ? 1.0 + 0.02 * Math.sin(Date.now() * 0.005) : 1.0;
-    canvas.scale(pulseScale, pulseScale);
+    const shieldVisible = shouldDrawShield();
+    const headInset = gridSize * 0.025;
+    const headSize = gridSize - headInset * 2;
+    const headRadius = Math.max(6, gridSize * 0.24);
 
     canvas.fillStyle = "rgb(212, 175, 55)";
-    canvas.fillRect(2, 2, gridSize - 4, gridSize - 4);
-    canvas.strokeStyle = "#1A1A1B";
-    canvas.lineWidth = 2.5;
     canvas.beginPath();
-    canvas.moveTo(5, 5);
-    canvas.lineTo(gridSize - 5, gridSize - 5);
-    canvas.moveTo(gridSize - 5, 5);
-    canvas.lineTo(5, gridSize - 5);
+    canvas.roundRect(headInset, headInset, headSize, headSize, headRadius);
+    canvas.fill();
+
+    if (shieldVisible) {
+        canvas.fillStyle = "rgba(120, 195, 255, 0.5)";
+        canvas.beginPath();
+        canvas.roundRect(headInset * 0.5, headInset * 0.5, gridSize - headInset, gridSize - headInset, headRadius);
+        canvas.fill();
+    }
+
+    canvas.fillStyle = "rgba(255, 240, 190, 0.32)";
+    canvas.beginPath();
+    canvas.roundRect(headInset + gridSize * 0.08, headInset + gridSize * 0.08, headSize * 0.55, headSize * 0.32, headRadius * 0.6);
+    canvas.fill();
+
+    canvas.strokeStyle = "#1A1A1B";
+    canvas.lineWidth = 2;
+    canvas.beginPath();
+    canvas.roundRect(headInset, headInset, headSize, headSize, headRadius);
+    canvas.stroke();
+
+    const eyeY = gridSize * 0.34;
+    const eyeRadius = Math.max(2.2, gridSize * 0.09);
+    const pupilRadius = Math.max(1.2, gridSize * 0.04);
+
+    canvas.fillStyle = "#F7F1D5";
+    canvas.beginPath();
+    canvas.arc(gridSize * 0.67, eyeY, eyeRadius, 0, Math.PI * 2);
+    canvas.arc(gridSize * 0.67, gridSize * 0.66, eyeRadius, 0, Math.PI * 2);
+    canvas.fill();
+
+    canvas.fillStyle = "#1A1A1B";
+    canvas.beginPath();
+    canvas.arc(gridSize * 0.72, eyeY, pupilRadius, 0, Math.PI * 2);
+    canvas.arc(gridSize * 0.72, gridSize * 0.66, pupilRadius, 0, Math.PI * 2);
+    canvas.fill();
+
+    canvas.strokeStyle = "rgba(26, 26, 27, 0.75)";
+    canvas.lineWidth = 1.5;
+    canvas.beginPath();
+    canvas.moveTo(gridSize * 0.82, gridSize * 0.46);
+    canvas.lineTo(gridSize * 0.92, gridSize * 0.5);
+    canvas.lineTo(gridSize * 0.82, gridSize * 0.54);
     canvas.stroke();
 
     canvas.restore();
@@ -336,42 +389,43 @@ function draw() {
         const x = part[0] * gridSize;
         const y = part[1] * gridSize;
 
-        const ratio = 1 - 0.5 * ((index) / (snake.length));
-        const opacity = ratio*0.8 + 0.2;
-        const inset = (1-ratio)*gridSize*0.5;
+        const ratio = 1 - 0.5 * (index / snake.length);
+        const opacity = ratio * 0.8 + 0.2;
+        const inset = (1 - ratio) * gridSize * 0.5;
+        const bodyLeft = x + inset + 1.5;
+        const bodyTop = y + inset + 1.5;
+        const bodySize = gridSize * ratio - 3;
+        const bodyRadius = Math.max(3, bodySize * 0.18);
 
-        canvas.strokeStyle = `rgba(165, 135, 15, ${opacity})`;
-        canvas.lineWidth = 2;
-        canvas.strokeRect(x + inset + 1, y + inset + 1, gridSize*ratio - 2, gridSize*ratio - 2);
-        canvas.fillStyle = `rgba(165, 135, 15, ${opacity})`;
-        canvas.fillRect(x + inset + 2, y + inset + 2, gridSize*ratio - 4, gridSize*ratio - 4);
+        canvas.fillStyle = `rgba(212, 175, 55, ${opacity})`;
+        canvas.beginPath();
+        canvas.roundRect(bodyLeft, bodyTop, bodySize, bodySize, bodyRadius);
+        canvas.fill();
+
+        canvas.fillStyle = `rgba(255, 240, 190, ${opacity * 0.28})`;
+        canvas.beginPath();
+        canvas.roundRect(
+            bodyLeft + bodySize * 0.12,
+            bodyTop + bodySize * 0.12,
+            bodySize * 0.5,
+            bodySize * 0.24,
+            Math.max(2, bodyRadius * 0.55)
+        );
+        canvas.fill();
+
+        canvas.strokeStyle = `rgba(26, 26, 27, ${0.72 + ratio * 0.18})`;
+        canvas.lineWidth = Math.max(1.4, gridSize * 0.055);
+        canvas.beginPath();
+        canvas.roundRect(bodyLeft, bodyTop, bodySize, bodySize, bodyRadius);
+        canvas.stroke();
+
+        if (shieldVisible) {
+            canvas.fillStyle = "rgba(120, 195, 255, 0.5)";
+            canvas.fillRect(x, y, gridSize, gridSize);
+        }
     });
-}
 
-function playTurnSound() {
-    let oscillator = audioContext.createOscillator();
-    let gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.frequency.setValueAtTime(2000, audioContext.currentTime); // High-freq
-    oscillator.type = 'square';
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-}
-
-function playEatSound() {
-    let oscillator = audioContext.createOscillator();
-    let gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.frequency.setValueAtTime(100, audioContext.currentTime); // Low-freq
-    oscillator.type = 'sawtooth';
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
+    if (shieldVisible) drawSheildOutline();
 }
 
 function togglePause() {
@@ -379,9 +433,118 @@ function togglePause() {
     if (isPaused) {
         clearInterval(gameInterval);
         gameInterval = null;
+        if (pauseMenu && !pauseMenu.open) pauseMenu.showModal();
     } else {
-        const interval = toggle.checked ? 1000 / (Number(speed.value) || 40) : 150;
+        if (pauseMenu && pauseMenu.open) pauseMenu.close();
+        const interval = toggle.checked ? 1000 / (Number(speed.value) || 40) : (150 - 2*Math.min(62.5, currentScore));
         gameInterval = setInterval(runGame, interval);
     }
 }
 
+document.getElementById("resume").onclick = () => {
+    if (isPaused) togglePause();
+};
+
+document.getElementById("restartPause").onclick = () => {
+    if (pauseMenu && pauseMenu.open) pauseMenu.close();
+    isPaused = false;
+    document.getElementById("Canvas").style.display = "block";
+    document.getElementById("RunningInfo").style.visibility = "visible";
+    player.innerText = username.value;
+    score.innerText = 0;
+    startGame();
+};
+
+document.getElementById("homePause").onclick = () => {
+    if (pauseMenu && pauseMenu.open) pauseMenu.close();
+    isPaused = false;
+    clearInterval(gameInterval);
+    gameInterval = null;
+    document.getElementById("Canvas").style.display = "none";
+    document.getElementById("RunningInfo").style.visibility = "hidden";
+    document.getElementById("StartScreen").style.display = "block";
+};
+
+function drawSheildOutline() {
+    canvas.save();
+    canvas.strokeStyle = "rgba(90, 170, 255, 0.95)";
+    canvas.lineWidth = 4;
+    canvas.lineCap = "round";
+    canvas.lineJoin = "round";
+    canvas.beginPath();
+    const cornerRadius = Math.min(gridSize * 0.22, 10);
+
+    const segmentHasConnection = (fromX, fromY, toX, toY, direction) => {
+        if (!toX && toX !== 0) return false;
+        const deltaX = toX - fromX;
+        const deltaY = toY - fromY;
+
+        if (direction === "top") return deltaX === 0 && deltaY === -1;
+        if (direction === "right") return deltaX === 1 && deltaY === 0;
+        if (direction === "bottom") return deltaX === 0 && deltaY === 1;
+        return deltaX === -1 && deltaY === 0;
+    };
+
+    snake.forEach(([cellX, cellY], index) => {
+        const left = cellX * gridSize;
+        const top = cellY * gridSize;
+        const right = left + gridSize;
+        const bottom = top + gridSize;
+        const previous = snake[index - 1];
+        const next = snake[index + 1];
+
+        const hasTopConnection =
+            (previous && segmentHasConnection(cellX, cellY, previous[0], previous[1], "top")) ||
+            (next && segmentHasConnection(cellX, cellY, next[0], next[1], "top"));
+        const hasRightConnection =
+            (previous && segmentHasConnection(cellX, cellY, previous[0], previous[1], "right")) ||
+            (next && segmentHasConnection(cellX, cellY, next[0], next[1], "right"));
+        const hasBottomConnection =
+            (previous && segmentHasConnection(cellX, cellY, previous[0], previous[1], "bottom")) ||
+            (next && segmentHasConnection(cellX, cellY, next[0], next[1], "bottom"));
+        const hasLeftConnection =
+            (previous && segmentHasConnection(cellX, cellY, previous[0], previous[1], "left")) ||
+            (next && segmentHasConnection(cellX, cellY, next[0], next[1], "left"));
+        const roundTopLeft = !hasTopConnection && !hasLeftConnection;
+        const roundTopRight = !hasTopConnection && !hasRightConnection;
+        const roundBottomRight = !hasBottomConnection && !hasRightConnection;
+        const roundBottomLeft = !hasBottomConnection && !hasLeftConnection;
+
+        if (!hasTopConnection) {
+            canvas.moveTo(left + (roundTopLeft ? cornerRadius : 0), top);
+            canvas.lineTo(right - (roundTopRight ? cornerRadius : 0), top);
+        }
+        if (!hasRightConnection) {
+            canvas.moveTo(right, top + (roundTopRight ? cornerRadius : 0));
+            canvas.lineTo(right, bottom - (roundBottomRight ? cornerRadius : 0));
+        }
+        if (!hasBottomConnection) {
+            canvas.moveTo(left + (roundBottomLeft ? cornerRadius : 0), bottom);
+            canvas.lineTo(right - (roundBottomRight ? cornerRadius : 0), bottom);
+        }
+        if (!hasLeftConnection) {
+            canvas.moveTo(left, top + (roundTopLeft ? cornerRadius : 0));
+            canvas.lineTo(left, bottom - (roundBottomLeft ? cornerRadius : 0));
+        }
+
+        if (roundTopLeft) {
+            canvas.moveTo(left, top + cornerRadius);
+            canvas.arc(left + cornerRadius, top + cornerRadius, cornerRadius, Math.PI, 1.5 * Math.PI);
+        }
+        if (roundTopRight) {
+            canvas.moveTo(right - cornerRadius, top);
+            canvas.arc(right - cornerRadius, top + cornerRadius, cornerRadius, 1.5 * Math.PI, 0);
+        }
+        if (roundBottomRight) {
+            canvas.moveTo(right, bottom - cornerRadius);
+            canvas.arc(right - cornerRadius, bottom - cornerRadius, cornerRadius, 0, 0.5 * Math.PI);
+        }
+        if (roundBottomLeft) {
+            canvas.moveTo(left + cornerRadius, bottom);
+            canvas.arc(left + cornerRadius, bottom - cornerRadius, cornerRadius, 0.5 * Math.PI, Math.PI);
+        }
+    });
+
+    canvas.stroke();
+    canvas.restore();
+}
