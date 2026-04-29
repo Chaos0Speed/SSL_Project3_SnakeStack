@@ -168,16 +168,96 @@ The fields represent username, score, cause of death (\texttt{WALL} or \texttt{S
 %--- 7. Administrative Features ---%
 \section{Administrative Features}
 
-The Bash script provides a menu-driven terminal interface with the following capabilities:
-\begin{itemize}
-    \item \textbf{Select user}: Lists all unique usernames and validates the selection.
-    \item \textbf{View recent games}: Displays the last 20 games for the selected user, colour-coded by death cause.
-    \item \textbf{Analytics}: Computes average score, average survival time, and death cause breakdown, optionally filtered by a timestamp cutoff.
-    \item \textbf{Delete entries}: Remove records by username, by exact timestamp, or clean malformed lines.
-    \item \textbf{Log rotation}: Creates a timestamped \texttt{.tar.gz} backup of \texttt{history.txt}, trims the live file to its last 10 entries, and auto-deletes backups older than the five most recent.
-    \item \textbf{Sort and view}: Sorts entries by timestamp, username, or score.
-\end{itemize}
+The administration layer is implemented using a Bash script (\texttt{admin.sh}). It directly reads and processes the \texttt{history.txt} file without interacting with the backend, ensuring proper separation of concerns.
 
+\subsection{User Selection and Filtering}
+
+The script extracts unique usernames using:
+
+\begin{lstlisting}
+cut -d',' -f1 history.txt | sort | uniq
+\end{lstlisting}
+
+This allows operations to be performed on specific users.
+
+\subsection{Viewing Recent Entries}
+
+Recent game records are displayed using:
+
+\begin{lstlisting}
+tail -n 20 history.txt
+\end{lstlisting}
+
+\subsection{AWK-based Analytics}
+
+The script computes mean score using:
+
+\begin{lstlisting}
+awk -F',' '{sum += $2; count++} END {print sum/count}'
+\end{lstlisting}
+
+Mean duration is computed similarly:
+
+\begin{lstlisting}
+awk -F',' '{dur += $4; count++} END {print dur/count}'
+\end{lstlisting}
+
+\subsection{Death Cause Analysis}
+
+The script counts occurrences of different causes:
+
+\begin{lstlisting}
+if($3=="WALL") w++
+else if($3=="SELF") s++
+else if($3=="ENEMY") e++
+\end{lstlisting}
+
+These values are later used to calculate proportions.
+
+\subsection{Timestamp Conversion Logic}
+
+Timestamps are stored in the format:
+
+\begin{verbatim}
+DD-MM-YYYY HH:MM:SS
+\end{verbatim}
+
+To enable correct sorting, the date is rearranged:
+
+\begin{lstlisting}
+year = substr($5,7,4)
+month = substr($5,4,2)
+day = substr($5,1,2)
+\end{lstlisting}
+
+This converts it into:
+
+\begin{verbatim}
+YYYYMMDD
+\end{verbatim}
+
+\subsection{Sorting Records}
+
+Sorting by score:
+
+\begin{lstlisting}
+sort -t',' -k2 -n history.txt
+\end{lstlisting}
+
+Sorting by timestamp (after conversion):
+
+\begin{lstlisting}
+awk -F',' '{print year month day "," $0}' | sort | cut -d',' -f2-
+\end{lstlisting}
+
+\subsection{Log Rotation}
+
+Backup and trimming of logs is done using:
+
+\begin{lstlisting}
+tar -czf backup.tar.gz history.txt
+tail -n 10 history.txt > temp && mv temp history.txt
+\end{lstlisting}
 \sectionsep
 
 %--- 8. Hurdles ---%
