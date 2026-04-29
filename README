@@ -1,3 +1,14 @@
+Requirement:
+`pip install flask` (if not previously installed)
+
+To start the server run:
+`python3 app.py` in the terminal.
+
+Then clik on the link displayed in the terminal to open the game.
+
+For the History review and Administrator functions run :
+`bash admin.sh`
+
 ROLL1=25B0940
 ROLL2=25B1031
 ProjectNumber=3
